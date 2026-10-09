@@ -11,8 +11,8 @@ export default defineConfig(({ command }) => {
       alias: {
         // Alias to the single CJS bundle to avoid Vite traversing 1300+ individual ESM icon
         // files in lucide-react's /dist/esm/icons/ directory, which causes the build to stall.
-        'lucide-react': path.resolve(__dirname, 'node_modules/lucide-react/dist/cjs/lucide-react.js'),
-        '@': path.resolve(__dirname, '.'),
+        'lucide-react': path.resolve(import.meta.dirname, 'node_modules/lucide-react/dist/cjs/lucide-react.js'),
+        '@': path.resolve(import.meta.dirname, '.'),
       },
     },
     server: {

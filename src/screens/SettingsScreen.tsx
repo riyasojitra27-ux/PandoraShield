@@ -129,23 +129,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClearHistory, 
               </button>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div>
-                  <h4 className="text-xs font-semibold text-slate-900 dark:text-white">Read Aloud</h4>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">Speech synthesis voice assistant</p>
-                </div>
-                <span className="text-[9px] bg-blue-500/15 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded font-bold uppercase tracking-wider">Prototype</span>
-              </div>
-              <button
-                onClick={() => setReadAloudEnabled(!readAloudEnabled)}
-                className={`w-12 h-6 rounded-full transition-colors relative cursor-pointer p-0.5 ${
-                  readAloudEnabled ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-700'
-                }`}
-              >
-                <div className={`w-5 h-5 rounded-full bg-white transition-transform ${readAloudEnabled ? 'translate-x-6' : 'translate-x-0'}`} />
-              </button>
-            </div>
           </div>
         </div>
 
@@ -153,25 +136,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClearHistory, 
         <div className="p-5 rounded-3xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-4 shadow-sm">
           <div>
             <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">Detection Preferences</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Configure mock engine and demo capabilities</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Configure engine and capabilities</p>
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-              <div>
-                <h4 className="text-xs font-semibold text-slate-900 dark:text-white">Demo Mode</h4>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">Show quick demo scenario buttons on scan screens</p>
-              </div>
-              <button
-                onClick={() => setDemoMode(!demoMode)}
-                className={`w-12 h-6 rounded-full transition-colors relative cursor-pointer p-0.5 ${
-                  demoMode ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-700'
-                }`}
-              >
-                <div className={`w-5 h-5 rounded-full bg-white transition-transform ${demoMode ? 'translate-x-6' : 'translate-x-0'}`} />
-              </button>
-            </div>
-
             <div className="flex items-center justify-between">
               <div>
                 <h4 className="text-xs font-semibold text-slate-900 dark:text-white">Local-First Detection</h4>
@@ -225,13 +193,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClearHistory, 
             </div>
             <div>
               <h3 className="text-base font-bold text-slate-900 dark:text-white">PandoraShield</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Version 2.4.0 &middot; Prototype Status</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Version 2.4.0 &middot; Local-First AI</p>
             </div>
           </div>
-
-          <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-            PandoraShield is designed to connect to the future Android/Kotlin local ONNX detection engine.
-          </p>
         </div>
       </div>
     </div>

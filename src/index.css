@@ -6,6 +6,8 @@
 @source not "../public/ort-wasm";
 @source not "../public/models";
 
+/* Force Tailwind v4 to use class-based dark mode instead of OS media preference */
+@custom-variant dark (&:is(.dark *));
 
 :root, [data-theme="light"] {
   --bg-color: #F5F8FC;

@@ -9,9 +9,10 @@
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
-    "test": "tsx tests/detectionEngine.test.ts"
+    "test": "tsx tests/detectionEngine.test.ts",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   },
-
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
     "@vitejs/plugin-react": "^6.1.1",
@@ -28,9 +29,9 @@
     "@types/react-dom": "^19.3.0",
     "autoprefixer": "^10.4.21",
     "esbuild": "^0.25.0",
+    "gh-pages": "^6.3.0",
     "tailwindcss": "^4.3.3",
     "tsx": "^4.21.0",
     "typescript": "^7.0.2"
   }
-
 }
