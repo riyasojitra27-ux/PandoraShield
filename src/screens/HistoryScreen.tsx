@@ -23,9 +23,10 @@ export const HistoryScreen: React.FC<HistoryScreenProps> = ({ history, onSelectR
 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      const matchInput = item.originalInput.toLowerCase().includes(q);
+      const matchInput = (item.originalInput || '').toLowerCase().includes(q);
       const matchSnippet = item.titleSnippet?.toLowerCase().includes(q) || false;
       return matchInput || matchSnippet;
+
     }
 
     return true;

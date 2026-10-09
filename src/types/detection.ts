@@ -10,8 +10,8 @@ export interface DetectionEvidence {
 }
 
 export interface ScamChainStep {
-  stage: string;
-  label: string;
+  stage?: string;
+  label?: string;
   detected: boolean;
   description?: string;
   type?: string;
@@ -20,7 +20,7 @@ export interface ScamChainStep {
 
 export interface DetectionResult {
   id: string;
-  timestamp: number;
+  timestamp: number | string;
 
   inputType: InputType;
   originalInput?: string;
@@ -28,30 +28,36 @@ export interface DetectionResult {
   riskScore: number; // 0 - 100
   severity: Severity;
   verdict: Verdict | string;
-  category: string;
+  category?: string;
 
   explanation: string;
+  recommendation?: string;
+  recommendations?: string[];
 
   evidence: DetectionEvidence[];
-
   scamChain: ScamChainStep[];
 
-  recommendations: string[];
+  technicalDetails?:
+    | {
+        model?: string;
+        confidence?: number;
+        indicators?: string[];
+        threatIntelMatch?: boolean;
+        textRisk?: number | null;
+        urlRisk?: number | null;
+      }
+    | string[];
 
-  technicalDetails?: {
-    model?: string;
-    confidence?: number;
-    indicators?: string[];
-    threatIntelMatch?: boolean;
-  };
-
-  source: 'LOCAL' | 'BACKEND' | 'HYBRID';
+  source?: 'LOCAL' | 'BACKEND' | 'HYBRID';
 
   // Backwards compatibility properties used across existing UI
   confidence?: number;
   detectedSignals?: string[];
   titleSnippet?: string;
   success?: boolean;
+  textRisk?: number | null;
+  urlRisk?: number | null;
+  threatIntelMatch?: boolean;
 }
 
 export interface ProtectionEvent {

@@ -31,9 +31,10 @@ export const UrlScannerScreen: React.FC<UrlScannerScreenProps> = ({ onBack, onAn
   const loadDemo = (key: string) => {
     const scenario = DEMO_URLS[key];
     if (scenario) {
-      setUrl(scenario.originalInput);
+      setUrl(scenario.originalInput || '');
       setError('');
     }
+
   };
 
   return (

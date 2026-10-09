@@ -1,21 +1,17 @@
 /**
  * @file detectionService.ts
  * @description Centralized detection service entry point for PandoraShield.
- * All detection requests pass through this service using HybridDetectionEngine.
+ * All detection requests run locally in-browser via LocalDetectionCoordinator.
  */
 
 import { DetectionResult, ProtectionEvent, Severity, Verdict } from '../types/detection';
 import { DEMO_SCENARIOS, DEMO_URLS, INITIAL_PROTECTION_EVENTS } from '../data/mockDetections';
 import { LocalDetectionEngine } from './LocalDetectionEngine';
-import { BackendDetectionEngine } from './BackendDetectionEngine';
-import { HybridDetectionEngine } from './HybridDetectionEngine';
 
 const HISTORY_STORAGE_KEY = 'pandora_shield_history_v3';
 const EVENTS_STORAGE_KEY = 'pandora_shield_events_v3';
 
 const localEngine = new LocalDetectionEngine();
-const backendEngine = new BackendDetectionEngine();
-const hybridEngine = new HybridDetectionEngine(localEngine, backendEngine);
 
 export function getInitialHistory(): DetectionResult[] {
   return [
@@ -24,7 +20,7 @@ export function getInitialHistory(): DetectionResult[] {
     DEMO_SCENARIOS['job-offer'],
     DEMO_SCENARIOS['otp-scam'],
     DEMO_URLS['phishing-login'],
-    DEMO_SCENARIOS['safe-bank']
+    DEMO_SCENARIOS['safe-bank'],
   ].map(s => ({
     id: s.id,
     timestamp: Date.now(),
@@ -36,12 +32,13 @@ export function getInitialHistory(): DetectionResult[] {
     category: s.category || 'Threat',
     explanation: s.explanation,
     evidence: s.evidence.map(e => ({ title: e.title, description: e.description, type: e.type, severity: e.severity })),
-    scamChain: s.scamChain.map(sc => ({ stage: sc.type, label: sc.title, detected: sc.detected, description: sc.description })),
-    recommendations: [s.recommendation],
+    scamChain: s.scamChain.map(sc => ({ stage: sc.type || '', label: sc.title || '', detected: sc.detected, description: sc.description })),
+    recommendation: s.recommendation,
+    recommendations: s.recommendation ? [s.recommendation] : [],
     technicalDetails: { model: 'PandoraShield Local', confidence: 0.95 },
     source: 'LOCAL',
     confidence: 95,
-    titleSnippet: s.titleSnippet
+    titleSnippet: s.titleSnippet,
   }));
 }
 
@@ -96,7 +93,7 @@ export function addProtectionEvent(event: Omit<ProtectionEvent, 'id' | 'timestam
   const newEvt: ProtectionEvent = {
     ...event,
     id: 'evt-' + Date.now(),
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   };
   const updated = [newEvt, ...events];
   try {
@@ -108,44 +105,43 @@ export function addProtectionEvent(event: Omit<ProtectionEvent, 'id' | 'timestam
 }
 
 export async function analyzeText(text: string): Promise<DetectionResult> {
-  const result = await hybridEngine.analyzeText(text);
+  const result = await localEngine.analyzeText(text);
   saveResultToHistory(result);
   addProtectionEvent({
-    title: `Detected ${result.category || 'Suspicious Content'}`,
-    description: `Flagged message analyzing "${result.titleSnippet || 'suspicious text'}"`,
+    title: `Detected ${result.category || 'Content Scan'}`,
+    description: `Analyzed message "${result.titleSnippet || 'text input'}"`,
     severity: result.severity,
-    isSimulated: true
+    isSimulated: false,
   });
   return result;
 }
 
 export async function analyzeUrl(url: string): Promise<DetectionResult> {
-  const result = await hybridEngine.analyzeUrl(url);
+  const result = await localEngine.analyzeUrl(url);
   saveResultToHistory(result);
   addProtectionEvent({
-    title: `Blocked phishing link`,
-    description: `Prevented access to ${result.titleSnippet || 'suspicious domain'}`,
+    title: result.severity === 'SAFE' ? 'Verified safe link' : 'Flagged suspicious link',
+    description: `Inspected domain "${result.titleSnippet || url}"`,
     severity: result.severity,
-    isSimulated: true
+    isSimulated: false,
   });
   return result;
 }
 
-export async function analyzeScreenshot(image: Blob | File): Promise<DetectionResult> {
-  const result = await hybridEngine.analyzeScreenshot(image);
+export async function analyzeScreenshot(image: Blob | File | string): Promise<DetectionResult> {
+  const result = await localEngine.analyzeScreenshot(image);
+
   saveResultToHistory(result);
   addProtectionEvent({
-    title: 'Analyzed suspicious screenshot',
-    description: 'Flagged OCR extracted phishing text in uploaded image',
+    title: 'Analyzed screenshot',
+    description: 'Inspected uploaded screenshot container locally',
     severity: result.severity,
-    isSimulated: true
+    isSimulated: false,
   });
   return result;
 }
 
 export async function runSafetyCheck(actionType: string): Promise<DetectionResult> {
-  await new Promise(resolve => setTimeout(resolve, 1200));
-
   let riskScore = 15;
   let verdict: Verdict = 'SAFE';
   let severity: Severity = 'SAFE';
@@ -176,16 +172,21 @@ export async function runSafetyCheck(actionType: string): Promise<DetectionResul
     verdict,
     category: 'Safety Assessment',
     explanation,
-    evidence: [{
-      title: 'Intended Action Risk Analysis',
-      description: explanation,
-      severity
-    }],
-    scamChain: [{ stage: 'EVAL', label: 'Intent Evaluation', detected: riskScore > 50, description: 'Assessed potential security consequences.' }],
+    recommendation,
     recommendations: [recommendation],
+    evidence: [
+      {
+        title: 'Intended Action Risk Analysis',
+        description: explanation,
+        severity,
+      },
+    ],
+    scamChain: [
+      { stage: 'EVAL', label: 'Intent Evaluation', detected: riskScore > 50, description: 'Assessed potential security consequences.' },
+    ],
     technicalDetails: { model: 'PandoraShield Safety Engine' },
     source: 'LOCAL',
-    titleSnippet: `Safety Check: ${actionType}`
+    titleSnippet: `Safety Check: ${actionType}`,
   };
 
   saveResultToHistory(result);
@@ -197,11 +198,11 @@ export function simulateLiveProtectionEvent(): ProtectionEvent {
     { title: 'Blocked malicious APK download', description: 'Prevented sideloading of trojanized banking app', severity: 'CRITICAL' as Severity },
     { title: 'Intercepted OTP phishing SMS', description: 'Detected automated credential harvester from unknown sender', severity: 'HIGH' as Severity },
     { title: 'Warning: Suspicious clipboard URL', description: 'Clipboard contained a flagged phishing redirect link', severity: 'MEDIUM' as Severity },
-    { title: 'Safe link verified', description: 'Inspected and verified official google.com link', severity: 'SAFE' as Severity }
+    { title: 'Safe link verified', description: 'Inspected and verified official google.com link', severity: 'SAFE' as Severity },
   ];
   const sample = samples[Math.floor(Math.random() * samples.length)];
   return addProtectionEvent({
     ...sample,
-    isSimulated: true
+    isSimulated: true,
   });
 }

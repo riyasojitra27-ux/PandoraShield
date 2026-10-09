@@ -109,13 +109,23 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({ result, onBack, onNe
             ) : (
               <div className="space-y-1.5 pt-1 text-xs text-slate-700 dark:text-slate-300 font-mono">
                 <p className="text-blue-600 dark:text-blue-300 font-bold mb-1">Technical Indicators:</p>
-                {result.technicalDetails.map((tech, i) => (
+                {(Array.isArray(result.technicalDetails)
+                  ? result.technicalDetails
+                  : result.technicalDetails
+                  ? [
+                      `Model: ${result.technicalDetails.model || 'PandoraShield Core'}`,
+                      ...(result.technicalDetails.indicators || []),
+                      result.technicalDetails.confidence ? `Confidence: ${Math.round(result.technicalDetails.confidence * 100)}%` : '',
+                    ].filter(Boolean)
+                  : ['On-Device Heuristic & Model Verification Active']
+                ).map((tech, i) => (
                   <div key={i} className="flex items-start gap-2">
                     <span className="text-blue-500 dark:text-blue-400">•</span> {tech}
                   </div>
                 ))}
               </div>
             )}
+
           </div>
         </div>
       </motion.div>
@@ -163,9 +173,13 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({ result, onBack, onNe
       )}
 
       {/* Recommendations & What to do */}
-      <RecommendationCard verdict={result.verdict} recommendation={result.recommendation} />
+      <RecommendationCard
+        verdict={(result.verdict as any) || 'SAFE'}
+        recommendation={result.recommendation || (result.recommendations && result.recommendations[0]) || 'Verify suspicious contacts through official independent channels.'}
+      />
 
       {/* Fraud Warning Modal */}
+
       {showWarningModal && (
         <FraudWarningModal result={result} onClose={() => setShowWarningModal(false)} />
       )}

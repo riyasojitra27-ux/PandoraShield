@@ -30,9 +30,10 @@ export const MessageScannerScreen: React.FC<MessageScannerScreenProps> = ({ onBa
   const loadDemo = (key: string) => {
     const scenario = DEMO_SCENARIOS[key];
     if (scenario) {
-      setText(scenario.originalInput);
+      setText(scenario.originalInput || '');
       setError('');
     }
+
   };
 
   return (

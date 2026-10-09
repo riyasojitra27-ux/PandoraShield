@@ -15,7 +15,8 @@ export const FraudWarningModal: React.FC<FraudWarningModalProps> = ({ result, on
   const warningText = `⚠️ FRAUD WARNING - PANDORASHIELD ALERT ⚠️
 
 This message or link was analyzed and identified as a potential scam/phishing threat:
-"${result.titleSnippet || result.originalInput.substring(0, 40)}..."
+"${result.titleSnippet || (result.originalInput ? result.originalInput.substring(0, 40) : 'Suspicious Item')}..."
+
 
 Risk Assessment: ${result.severity} (${result.riskScore}/100)
 Verdict: ${result.verdict}

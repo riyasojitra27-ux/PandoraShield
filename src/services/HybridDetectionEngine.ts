@@ -29,8 +29,11 @@ export class HybridDetectionEngine implements DetectionEngine {
     backend.evidence.forEach(e => evidenceMap.set(e.title.toLowerCase(), e));
 
     const chainMap = new Map<string, ScamChainStep>();
-    local.scamChain.forEach(s => chainMap.set(s.stage || s.label, s));
-    backend.scamChain.forEach(s => chainMap.set(s.stage || s.label, s));
+    local.scamChain.forEach(s => chainMap.set(s.stage || s.label || 'step', s));
+    backend.scamChain.forEach(s => chainMap.set(s.stage || s.label || 'step', s));
+
+    const backendRecs = backend.recommendations || [];
+    const localRecs = local.recommendations || [];
 
     return {
       ...local,
@@ -39,14 +42,11 @@ export class HybridDetectionEngine implements DetectionEngine {
       severity: chosenSeverity,
       evidence: Array.from(evidenceMap.values()),
       scamChain: Array.from(chainMap.values()),
-      recommendations: backend.recommendations.length > 0 ? backend.recommendations : local.recommendations,
-      technicalDetails: {
-        ...(local.technicalDetails || {}),
-        ...(backend.technicalDetails || {}),
-        threatIntelMatch: backend.technicalDetails?.threatIntelMatch || false
-      },
+      recommendations: backendRecs.length > 0 ? backendRecs : localRecs,
+      technicalDetails: Array.isArray(local.technicalDetails) ? local.technicalDetails : ['Hybrid Threat Verification'],
       source: 'HYBRID'
     };
+
   }
 
   async analyzeText(text: string): Promise<DetectionResult> {

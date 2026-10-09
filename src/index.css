@@ -1,4 +1,11 @@
 @import "tailwindcss";
+/* Explicitly include only source files — exclude large binary assets in public/ */
+@source "../index.html";
+@source "../src";
+/* Exclude binary asset directories to prevent Tailwind scanner deadlock on large files */
+@source not "../public/ort-wasm";
+@source not "../public/models";
+
 
 :root, [data-theme="light"] {
   --bg-color: #F5F8FC;

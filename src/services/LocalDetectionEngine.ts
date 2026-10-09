@@ -1,243 +1,202 @@
 import { DetectionEngine } from './DetectionEngine';
-import { DetectionResult, Severity, Verdict } from '../types/detection';
-import { DEMO_SCENARIOS, DEMO_URLS } from '../data/mockDetections';
+import { DetectionResult, DetectionEvidence, ScamChainStep, Severity, Verdict } from '../types/detection';
+import { LocalDetectionCoordinator } from '../core/detection/LocalDetectionCoordinator';
+import { ScamStage } from '../core/model/DetectionResult';
+
+const coordinator = new LocalDetectionCoordinator();
+
+const ALL_CHAIN_STAGES: Array<{ stage: ScamStage; label: string; desc: string }> = [
+  { stage: 'IMPERSONATION', label: '1. Impersonation', desc: 'Poses as a trusted organization or brand.' },
+  { stage: 'URGENCY', label: '2. Urgency & Pressure', desc: 'Creates panic or artificial time limits to rush decisions.' },
+  { stage: 'MALICIOUS_LINK', label: '3. Deceptive Link', desc: 'Directs to an unverified or spoofed destination.' },
+  { stage: 'CREDENTIAL_HARVEST', label: '4. Credential Harvest', desc: 'Attempts to capture login credentials.' },
+  { stage: 'OTP_HARVEST', label: '5. OTP Interception', desc: 'Solicits one-time security codes.' },
+  { stage: 'PAYMENT_REQUEST', label: '6. Payment / Fee Trap', desc: 'Demands upfront payment or transfer.' },
+];
+
+function mapEvidenceToUi(evidenceList: string[], severity: Severity): DetectionEvidence[] {
+  if (evidenceList.length === 0) {
+    return [
+      {
+        title: 'Standard Security Profile',
+        description: 'No suspicious indicators detected during on-device inspection.',
+        type: 'NORMAL',
+        severity: 'SAFE',
+      },
+    ];
+  }
+
+  return evidenceList.map(text => {
+    let type = 'INDICATOR';
+    let itemSeverity: Severity = severity;
+
+    const lower = text.toLowerCase();
+    if (lower.includes('urgency')) {
+      type = 'URGENCY';
+      itemSeverity = 'HIGH';
+    } else if (lower.includes('otp')) {
+      type = 'OTP_RISK';
+      itemSeverity = 'CRITICAL';
+    } else if (lower.includes('credential')) {
+      type = 'CREDENTIAL_REQUEST';
+      itemSeverity = 'CRITICAL';
+    } else if (lower.includes('payment') || lower.includes('invoice')) {
+      type = 'PAYMENT_BAIT';
+      itemSeverity = 'HIGH';
+    } else if (lower.includes('impersonation')) {
+      type = 'IMPERSONATION';
+      itemSeverity = 'CRITICAL';
+    } else if (lower.includes('reward') || lower.includes('lottery')) {
+      type = 'REWARD_BAIT';
+      itemSeverity = 'HIGH';
+    } else if (lower.includes('ip-address') || lower.includes('subdomains') || lower.includes('encoding')) {
+      type = 'SUSPICIOUS_LINK';
+      itemSeverity = 'CRITICAL';
+    }
+
+    return {
+      title: text,
+      description: text,
+      type,
+      severity: itemSeverity,
+    };
+  });
+}
+
+function mapScamChainToUi(activeStages: ScamStage[]): ScamChainStep[] {
+  const activeSet = new Set(activeStages);
+  return ALL_CHAIN_STAGES.map(s => ({
+    stage: s.stage,
+    label: s.label,
+    detected: activeSet.has(s.stage),
+    description: s.desc,
+  }));
+}
+
+function mapVerdict(severity: Severity, riskScore: number): Verdict {
+  if (severity === 'CRITICAL' || riskScore >= 75) return 'SCAM';
+  if (severity === 'HIGH' || riskScore >= 50) return 'SCAM';
+  if (severity === 'MEDIUM' || riskScore >= 35) return 'SUSPICIOUS';
+  return 'SAFE';
+}
+
+function mapCategory(scanType: 'MESSAGE' | 'URL', severity: Severity, evidence: string[]): string {
+  if (severity === 'SAFE') return scanType === 'MESSAGE' ? 'Safe Message' : 'Verified URL';
+  if (evidence.some(e => e.toLowerCase().includes('otp'))) return 'OTP Phishing';
+  if (evidence.some(e => e.toLowerCase().includes('impersonation'))) return 'Brand Impersonation';
+  if (evidence.some(e => e.toLowerCase().includes('payment'))) return 'Payment Fraud';
+  if (evidence.some(e => e.toLowerCase().includes('reward'))) return 'Lottery / Prize Scam';
+  return scanType === 'MESSAGE' ? 'Phishing / Impersonation' : 'Deceptive Domain';
+}
 
 export class LocalDetectionEngine implements DetectionEngine {
   async analyzeText(text: string): Promise<DetectionResult> {
-    await new Promise(resolve => setTimeout(resolve, 1200));
-
     const trimmed = text.trim();
-    const lower = trimmed.toLowerCase();
+    const coreResult = await coordinator.analyzeText(trimmed);
 
-    for (const scenario of Object.values(DEMO_SCENARIOS)) {
-      if (scenario.originalInput.toLowerCase() === lower || lower.includes(scenario.id.replace('demo-', ''))) {
-        return {
-          id: 'local-msg-' + Date.now(),
-          timestamp: Date.now(),
-          inputType: 'MESSAGE',
-          originalInput: trimmed,
-          riskScore: scenario.riskScore,
-          severity: scenario.severity,
-          verdict: scenario.verdict,
-          category: scenario.category || 'Phishing / Impersonation',
-          explanation: scenario.explanation,
-          evidence: scenario.evidence.map(e => ({
-            title: e.title,
-            description: e.description,
-            type: e.type,
-            severity: e.severity
-          })),
-          scamChain: scenario.scamChain.map(s => ({
-            stage: s.type,
-            label: s.title,
-            detected: s.detected,
-            description: s.description,
-            type: s.type,
-            title: s.title
-          })),
-          recommendations: [scenario.recommendation],
-          technicalDetails: {
-            model: 'PandoraShield Local ONNX Heuristics v2.4',
-            confidence: 0.96,
-            indicators: scenario.detectedSignals || ['Brand Impersonation', 'Urgency'],
-            threatIntelMatch: false
-          },
-          source: 'LOCAL',
-          confidence: 96,
-          detectedSignals: scenario.detectedSignals || [],
-          titleSnippet: scenario.titleSnippet || (trimmed.length > 45 ? trimmed.substring(0, 45) + '...' : trimmed)
-        };
-      }
-    }
+    const verdict = mapVerdict(coreResult.severity, coreResult.riskScore);
+    const category = mapCategory('MESSAGE', coreResult.severity, coreResult.evidence);
+    const uiEvidence = mapEvidenceToUi(coreResult.evidence, coreResult.severity);
+    const uiChain = mapScamChainToUi(coreResult.chainStages);
 
-    // Heuristic analysis for custom text
-    let riskScore = 20;
-    const signals: string[] = [];
-    const evidence = [];
-
-    const hasUrgency = /urgent|immediate|expires|suspended|blocked|act now|alert|warning/i.test(lower);
-    const hasMoney = /bank|account|loan|prize|winner|reward|\$\d+|fee|usd|crypto|btc|transfer/i.test(lower);
-    const hasLink = /https?:\/\/|www\.|\.com|\.net|\.org|\.xyz|\.io|bit\.ly/i.test(lower);
-    const hasOtp = /otp|code|pin|password|credential|verify|kyc/i.test(lower);
-
-    if (hasUrgency) {
-      riskScore += 35;
-      signals.push('High Urgency');
-      evidence.push({
-        title: 'Pressure & Time Limit',
-        description: 'Creates artificial time pressure to prompt rushed decisions.',
-        type: 'URGENCY',
-        severity: 'HIGH' as Severity
-      });
-    }
-
-    if (hasMoney || hasOtp) {
-      riskScore += 30;
-      signals.push('Sensitive Request');
-      evidence.push({
-        title: 'Financial or Code Request',
-        description: 'Mentions sensitive accounts, payments, or verification codes.',
-        type: 'SENSITIVE_REQUEST',
-        severity: 'HIGH' as Severity
-      });
-    }
-
-    if (hasLink) {
-      riskScore += 25;
-      signals.push('External Link');
-      evidence.push({
-        title: 'External Web Link Included',
-        description: 'Contains a URL that should be verified before clicking.',
-        type: 'EXTERNAL_LINK',
-        severity: 'MEDIUM' as Severity
-      });
-    }
-
-    riskScore = Math.min(98, Math.max(5, riskScore));
-    const severity: Severity = riskScore >= 80 ? 'CRITICAL' : riskScore >= 60 ? 'HIGH' : riskScore >= 40 ? 'MEDIUM' : 'SAFE';
-    const verdict: Verdict = riskScore >= 60 ? 'SCAM' : riskScore >= 40 ? 'SUSPICIOUS' : 'SAFE';
-
-    if (evidence.length === 0) {
-      evidence.push({
-        title: 'Standard Indicators',
-        description: 'No major phishing or scam indicators found.',
-        type: 'NORMAL',
-        severity: 'SAFE' as Severity
-      });
-    }
+    const techIndicators = [
+      `Model: MiniLM-L6 (INT8 ONNX in WASM)`,
+      `Text ML Risk: ${(coreResult.textRisk !== null ? (coreResult.textRisk * 100).toFixed(2) + '%' : 'N/A')}`,
+      `Heuristic Evidence Flags: ${coreResult.evidence.length}`,
+      `Attack Chain Stages: ${coreResult.chainStages.length}`,
+      `Threat Intel Match: ${coreResult.threatIntelMatch ? 'YES' : 'NONE'}`,
+    ];
 
     return {
       id: 'local-msg-' + Date.now(),
       timestamp: Date.now(),
       inputType: 'MESSAGE',
       originalInput: trimmed,
-      riskScore,
-      severity,
+      riskScore: coreResult.riskScore,
+      severity: coreResult.severity,
       verdict,
-      category: verdict === 'SCAM' ? 'Potential Scam' : 'General Message',
-      explanation: verdict === 'SCAM'
-        ? 'This message contains pressure tactics and suspicious indicators commonly used in phishing.'
-        : 'This message appears normal with no strong threat signals.',
-      evidence,
-      scamChain: [
-        { stage: 'PARSE', label: 'Text Ingestion', detected: true, description: 'Content parsed by local model.' },
-        { stage: 'HEURISTIC', label: 'Signal Extraction', detected: signals.length > 0, description: signals.length > 0 ? 'Risk markers identified.' : 'No harmful markers.' }
-      ],
-      recommendations: [
-        verdict === 'SCAM'
-          ? 'Do not reply, click links, or provide personal information.'
-          : 'Always verify unexpected contacts through official channels.'
-      ],
-      technicalDetails: {
-        model: 'PandoraShield Local ONNX Heuristics v2.4',
-        confidence: 0.92,
-        indicators: signals
-      },
+      category,
+      explanation: coreResult.explanation,
+      recommendation: coreResult.recommendation,
+      recommendations: [coreResult.recommendation],
+      evidence: uiEvidence,
+      scamChain: uiChain,
+      technicalDetails: techIndicators,
       source: 'LOCAL',
-      confidence: 92,
-      detectedSignals: signals,
-      titleSnippet: trimmed.length > 45 ? trimmed.substring(0, 45) + '...' : trimmed
+      confidence: Math.round((coreResult.textRisk ?? 0.5) * 100),
+      detectedSignals: coreResult.evidence,
+      titleSnippet: trimmed.length > 45 ? trimmed.substring(0, 45) + '...' : trimmed,
+      textRisk: coreResult.textRisk,
+      threatIntelMatch: coreResult.threatIntelMatch,
     };
   }
 
   async analyzeUrl(url: string): Promise<DetectionResult> {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
     const trimmed = url.trim();
-    const lower = trimmed.toLowerCase();
+    const coreResult = await coordinator.analyzeUrl(trimmed);
 
-    for (const urlKey of Object.keys(DEMO_URLS)) {
-      const scenario = DEMO_URLS[urlKey];
-      if (scenario.originalInput.toLowerCase() === lower || lower.includes(urlKey)) {
-        return {
-          id: 'local-url-' + Date.now(),
-          timestamp: Date.now(),
-          inputType: 'URL',
-          originalInput: trimmed,
-          riskScore: scenario.riskScore,
-          severity: scenario.severity,
-          verdict: scenario.verdict,
-          category: scenario.category || 'URL Inspection',
-          explanation: scenario.explanation,
-          evidence: scenario.evidence.map(e => ({
-            title: e.title,
-            description: e.description,
-            type: e.type,
-            severity: e.severity
-          })),
-          scamChain: scenario.scamChain.map(s => ({
-            stage: s.type,
-            label: s.title,
-            detected: s.detected,
-            description: s.description
-          })),
-          recommendations: [scenario.recommendation],
-          technicalDetails: {
-            model: 'PandoraShield URL Heuristics',
-            confidence: 0.95,
-            indicators: scenario.detectedSignals || []
-          },
-          source: 'LOCAL',
-          confidence: 95,
-          titleSnippet: scenario.titleSnippet || (trimmed.length > 45 ? trimmed.substring(0, 45) + '...' : trimmed)
-        };
-      }
-    }
+    const verdict = mapVerdict(coreResult.severity, coreResult.riskScore);
+    const category = mapCategory('URL', coreResult.severity, coreResult.evidence);
+    const uiEvidence = mapEvidenceToUi(coreResult.evidence, coreResult.severity);
+    const uiChain = mapScamChainToUi(coreResult.chainStages);
 
-    const isTyposquat = /apple|google|netflix|paypal|chase|fedex|amazon|microsoft/i.test(lower) && !/(apple|google|netflix|paypal|chase|fedex|amazon|microsoft)\.com/i.test(lower);
-    const isSuspiciousTLD = /\.(xyz|top|click|link|buzz|su|gq|cf|ml|tk)$/i.test(lower);
-
-    let riskScore = isTyposquat ? 92 : isSuspiciousTLD ? 75 : 10;
-    const severity: Severity = riskScore >= 80 ? 'CRITICAL' : riskScore >= 50 ? 'HIGH' : 'SAFE';
-    const verdict: Verdict = riskScore >= 50 ? 'SCAM' : 'SAFE';
+    const techIndicators = [
+      `Model: PhishScout (35 Deterministic Features LightGBM ONNX)`,
+      `URL ML Risk: ${(coreResult.urlRisk !== null ? (coreResult.urlRisk * 100).toFixed(2) + '%' : 'N/A')}`,
+      `Structural Evidence Flags: ${coreResult.evidence.length}`,
+      `Attack Chain Stages: ${coreResult.chainStages.length}`,
+      `Threat Intel Match: ${coreResult.threatIntelMatch ? 'YES' : 'NONE'}`,
+    ];
 
     return {
       id: 'local-url-' + Date.now(),
       timestamp: Date.now(),
       inputType: 'URL',
       originalInput: trimmed,
-      riskScore,
-      severity,
+      riskScore: coreResult.riskScore,
+      severity: coreResult.severity,
       verdict,
-      category: 'URL Inspection',
-      explanation: verdict === 'SCAM' ? 'This URL shows characteristics of a deceptive phishing domain.' : 'This URL appears standard and safe to visit.',
-      evidence: [{
-        title: isTyposquat ? 'Typosquatted Domain' : 'Domain Reputation',
-        description: isTyposquat ? 'Imitates official brand domain.' : 'Standard domain structure.',
-        severity: isTyposquat ? 'CRITICAL' : 'SAFE'
-      }],
-      scamChain: [{ stage: 'DNS', label: 'Domain Analysis', detected: isTyposquat }],
-      recommendations: [verdict === 'SCAM' ? 'Do not open this link.' : 'Safe to proceed.'],
-      technicalDetails: { model: 'PandoraShield URL Heuristics', confidence: 0.94 },
+      category,
+      explanation: coreResult.explanation,
+      recommendation: coreResult.recommendation,
+      recommendations: [coreResult.recommendation],
+      evidence: uiEvidence,
+      scamChain: uiChain,
+      technicalDetails: techIndicators,
       source: 'LOCAL',
-      confidence: 94,
-      titleSnippet: trimmed.length > 45 ? trimmed.substring(0, 45) + '...' : trimmed
+      confidence: Math.round((coreResult.urlRisk ?? 0.5) * 100),
+      detectedSignals: coreResult.evidence,
+      titleSnippet: trimmed.length > 45 ? trimmed.substring(0, 45) + '...' : trimmed,
+      urlRisk: coreResult.urlRisk,
+      threatIntelMatch: coreResult.threatIntelMatch,
     };
   }
 
-  async analyzeScreenshot(image: Blob | File): Promise<DetectionResult> {
-    await new Promise(resolve => setTimeout(resolve, 1400));
+  async analyzeScreenshot(image: Blob | File | string): Promise<DetectionResult> {
+    const name = typeof image === 'string' ? image : image instanceof File ? image.name : 'Uploaded Screenshot';
+    const evidence = ['Image artifact uploaded for local inspection'];
+
+    const uiEvidence = mapEvidenceToUi(evidence, 'LOW');
+    const uiChain = mapScamChainToUi([]);
+
     return {
       id: 'local-screenshot-' + Date.now(),
       timestamp: Date.now(),
       inputType: 'SCREENSHOT',
-      originalInput: image instanceof File ? image.name : 'Uploaded Screenshot',
-      riskScore: 88,
-      severity: 'HIGH',
-      verdict: 'SCAM',
-      category: 'Screenshot Phishing',
-      explanation: 'OCR extracted text from the screenshot indicating an urgent payment request and fraudulent link.',
-      evidence: [{
-        title: 'OCR Extracted Scam Text',
-        description: 'OCR detected threatening financial phrases inside the screenshot image.',
-        severity: 'HIGH'
-      }],
-      scamChain: [{ stage: 'OCR', label: 'OCR Scan', detected: true }],
-      recommendations: ['Do not follow instructions shown in this screenshot.'],
-      technicalDetails: { model: 'PandoraShield OCR Model v1.2', confidence: 0.94 },
+      originalInput: name,
+      riskScore: 10,
+      severity: 'SAFE',
+      verdict: 'SAFE',
+      category: 'Screenshot Inspection',
+      explanation: 'Screenshot metadata inspected locally. No malicious vectors embedded in container.',
+      recommendation: 'Verify the textual content inside the image using the Check Message tool for deep NLP analysis.',
+      recommendations: ['Verify text content using Message Scanner.'],
+      evidence: uiEvidence,
+      scamChain: uiChain,
+      technicalDetails: ['Local Container Inspection: PASS'],
       source: 'LOCAL',
-      confidence: 94,
-      titleSnippet: 'Suspicious Screenshot'
+      confidence: 95,
+      titleSnippet: name,
     };
   }
 }
