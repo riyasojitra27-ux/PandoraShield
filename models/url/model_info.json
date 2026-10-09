@@ -1,0 +1,95 @@
+{
+  "name": "PhishScout",
+  "version": "v1",
+  "model": "lightgbm-60x8L31-full35",
+  "algorithm": "LightGBM (gradient boosting)",
+  "params": {
+    "n_estimators": 60,
+    "max_depth": 8,
+    "num_leaves": 31,
+    "min_child_samples": 5,
+    "learning_rate": 0.1,
+    "objective": "binary",
+    "random_state": 42
+  },
+  "features": [
+    "url_length",
+    "hyphen_count",
+    "digit_count",
+    "subdomain_count",
+    "protocol_exists",
+    "special_char_count",
+    "entropy",
+    "path_depth",
+    "domain_length",
+    "is_domain_ip",
+    "has_at_symbol",
+    "has_double_slash_redirect",
+    "tld_length",
+    "trusted_tld",
+    "query_param_count",
+    "path_length",
+    "keyword_count",
+    "brand_in_host",
+    "brand_in_path",
+    "brand_count",
+    "has_punycode",
+    "has_nonstandard_port",
+    "percent_encoding_count",
+    "has_hex_ip",
+    "uppercase_ratio",
+    "www_count",
+    "max_digit_run",
+    "max_label_len",
+    "host_label_count",
+    "has_domain_in_path",
+    "query_length",
+    "equals_count",
+    "sensitive_extension",
+    "has_multiple_tlds",
+    "consecutive_punct"
+  ],
+  "n_features": 35,
+  "metrics": {
+    "train": {
+      "accuracy": 0.8777,
+      "precision": 0.9087,
+      "recall": 0.8396,
+      "f1": 0.8728,
+      "auc": 0.9483
+    },
+    "val": {
+      "accuracy": 0.8674,
+      "precision": 0.9004,
+      "recall": 0.8296,
+      "f1": 0.8635,
+      "auc": 0.9407
+    },
+    "test": {
+      "accuracy": 0.8697,
+      "precision": 0.9033,
+      "recall": 0.8254,
+      "f1": 0.8626,
+      "auc": 0.9369
+    },
+    "test_at_best_val_threshold": {
+      "threshold": 0.36,
+      "f1": 0.8529
+    }
+  },
+  "confusion_matrix_test": {
+    "TN": 1379,
+    "FP": 131,
+    "FN": 259,
+    "TP": 1224
+  },
+  "onnx_size_kb": 131.5,
+  "onnx_parity": 1.0,
+  "latency_us_median": 9.4,
+  "opset": 15,
+  "dataset": "saidutta69/PhishTrap",
+  "trained_on": "train split (13,969 rows)",
+  "eval_on": "held-out test (2,993 rows)",
+  "threshold_default": 0.5,
+  "threshold_recommended": 0.36
+}
