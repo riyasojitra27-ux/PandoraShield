@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ActiveTab, Navigation } from './components/Navigation';
+import { Navigation, ActiveTab } from './components/Navigation';
 import { HomeScreen } from './screens/HomeScreen';
 import { ScanHubScreen } from './screens/ScanHubScreen';
 import { MessageScannerScreen } from './screens/MessageScannerScreen';
@@ -7,6 +7,7 @@ import { UrlScannerScreen } from './screens/UrlScannerScreen';
 import { ScreenshotScannerScreen } from './screens/ScreenshotScannerScreen';
 import { SafetyCheckScreen } from './screens/SafetyCheckScreen';
 import { HelpSomeoneScreen } from './screens/HelpSomeoneScreen';
+import { PhantomScreen } from './screens/PhantomScreen';
 import { AnalysisProgress } from './components/AnalysisProgress';
 import { ResultScreen } from './screens/ResultScreen';
 import { HistoryScreen } from './screens/HistoryScreen';
@@ -109,6 +110,10 @@ function AppContent() {
             }}
             recentEvents={protectionEvents}
           />
+        )}
+
+        {activeTab === 'phantom' && (
+          <PhantomScreen onNavigateToScan={() => setActiveTab('scan')} />
         )}
 
         {activeTab === 'scan' && (

@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
-import { Shield, Home, Search, History, ShieldCheck, Settings, Lock } from 'lucide-react';
+import { Shield, Home, Search, History, ShieldCheck, Settings, Lock, EyeOff } from 'lucide-react';
 import { useSettings } from '../context/SettingsContext';
 
-export type ActiveTab = 'home' | 'scan' | 'history' | 'protection' | 'settings';
+export type ActiveTab = 'home' | 'phantom' | 'scan' | 'protection' | 'history' | 'settings';
 
 interface NavigationProps {
   activeTab: ActiveTab;
@@ -35,6 +35,7 @@ export const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab 
 
   const navItems = [
     { id: 'home', label: 'Home', icon: Home },
+    { id: 'phantom', label: 'Phantom', icon: EyeOff },
     { id: 'scan', label: 'Scan', icon: Search },
     { id: 'protection', label: 'Protection', icon: ShieldCheck },
     { id: 'history', label: 'History', icon: History },
@@ -126,7 +127,7 @@ export const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab 
         </div>
       </aside>
 
-      {/* Mobile Bottom Navigation Bar (Always fixed above everything with high z-index and safe padding) */}
+      {/* Mobile Bottom Navigation Bar */}
       <nav
         aria-label="Mobile Navigation"
         className="lg:hidden fixed bottom-0 left-0 right-0 backdrop-blur-lg px-2 py-2 z-50 flex items-center justify-around shadow-lg transition-colors"
