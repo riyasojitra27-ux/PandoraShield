@@ -3,9 +3,11 @@ import { ShieldAlert, Fingerprint, EyeOff, Search, ChevronRight, Activity, ScanL
 import { motion, AnimatePresence } from 'motion/react';
 import { analyzeXRay, XRayResult } from '../core/forensics/xray';
 import { compareStylometry, StylometryResult } from '../core/forensics/stylometry';
+import { injectCanary } from '../core/forensics/canary';
+import { Copy } from 'lucide-react';
 
 export const ForensicsHubScreen: React.FC = () => {
-  const [activeTool, setActiveTool] = useState<'hub' | 'xray' | 'stylometry'>('hub');
+  const [activeTool, setActiveTool] = useState<'hub' | 'xray' | 'stylometry' | 'canary'>('hub');
   
   // X-Ray State
   const [xrayInput, setXrayInput] = useState('');
@@ -15,6 +17,11 @@ export const ForensicsHubScreen: React.FC = () => {
   const [baselineInput, setBaselineInput] = useState('');
   const [suspectInput, setSuspectInput] = useState('');
   const [stylometryResult, setStylometryResult] = useState<StylometryResult | null>(null);
+
+  // Canary State
+  const [canaryText, setCanaryText] = useState('');
+  const [canaryTag, setCanaryTag] = useState('');
+  const [canaryResult, setCanaryResult] = useState('');
 
   const handleRunXRay = () => {
     if (!xrayInput) return;
@@ -83,6 +90,23 @@ export const ForensicsHubScreen: React.FC = () => {
                 Linguistic fingerprinting. Compare the writing style of a suspicious message against known past messages from your boss or friend.
               </p>
               <span className="text-xs font-bold text-purple-500 flex items-center gap-1">
+                Launch Tool <ChevronRight className="w-4 h-4" />
+              </span>
+            </div>
+
+            {/* Tool 3: Project Canary */}
+            <div
+              onClick={() => setActiveTool('canary')}
+              className="p-6 rounded-3xl border bg-slate-900/60 border-slate-800 hover:border-emerald-500/50 cursor-pointer transition-all group md:col-span-2"
+            >
+              <div className="p-3 w-12 h-12 rounded-2xl bg-emerald-500/15 text-emerald-400 mb-4 group-hover:scale-110 transition-transform flex items-center justify-center">
+                <ShieldAlert className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">Project Canary (Data Landmines)</h3>
+              <p className="text-sm text-slate-400 mb-4 max-w-2xl">
+                Weaponize zero-width characters to trap scammers. Inject an invisible cryptographic signature into your public bio (e.g., LinkedIn). If a scammer scrapes it and sends you a phishing email, PandoraShield will instantly trace the leaked data.
+              </p>
+              <span className="text-xs font-bold text-emerald-500 flex items-center gap-1">
                 Launch Tool <ChevronRight className="w-4 h-4" />
               </span>
             </div>
@@ -308,6 +332,105 @@ export const ForensicsHubScreen: React.FC = () => {
                           : 'The linguistic fingerprint of the suspicious message closely aligns with the baseline knowledge.'}
                       </p>
                     </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+
+        {/* CANARY TOOL */}
+        {activeTool === 'canary' && (
+          <motion.div
+            key="canary"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="space-y-6"
+          >
+            <button
+              onClick={() => setActiveTool('hub')}
+              className="text-xs font-bold text-slate-400 hover:text-white flex items-center gap-1"
+            >
+              &larr; Back to Lab
+            </button>
+            <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4">
+              <div className="flex items-center gap-3 mb-4">
+                <ShieldAlert className="w-6 h-6 text-emerald-400" />
+                <div>
+                  <h2 className="text-xl font-bold text-white">Project Canary</h2>
+                  <p className="text-xs text-slate-400">Invisible Data Landmine Generator</p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Public Profile Text</label>
+                  <textarea
+                    value={canaryText}
+                    onChange={(e) => setCanaryText(e.target.value)}
+                    placeholder="Enter the bio or text you want to post publicly (e.g. your resume summary)..."
+                    className="w-full h-40 p-4 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-sm focus:border-emerald-500 outline-none resize-none"
+                  />
+                </div>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Source Tag (The Trap)</label>
+                    <input
+                      type="text"
+                      value={canaryTag}
+                      onChange={(e) => setCanaryTag(e.target.value)}
+                      placeholder="e.g., LINKEDIN_PROFILE_2023"
+                      className="w-full p-4 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-sm focus:border-emerald-500 outline-none"
+                    />
+                  </div>
+                  
+                  <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700">
+                    <h3 className="text-sm font-bold text-white mb-2">How this works:</h3>
+                    <p className="text-xs text-slate-300 leading-relaxed">
+                      This tool converts your Source Tag into a cryptographic binary code of <strong>invisible zero-width characters</strong> and injects it into your Public Profile Text. 
+                      You can copy and paste the result to LinkedIn, Tinder, or a public resume. It will look perfectly normal. 
+                      <br/><br/>
+                      If an AI scraper copies your profile and a scammer uses it to write you a spear-phishing email, pasting that email into PandoraShield's Message Scanner will instantly trigger the hidden landmine, proving exactly where your data was stolen.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    if (canaryText && canaryTag) {
+                      setCanaryResult(injectCanary(canaryText, canaryTag));
+                    }
+                  }}
+                  disabled={!canaryText || !canaryTag}
+                  className="px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-sm"
+                >
+                  Generate Invisible Landmine
+                </button>
+              </div>
+
+              {canaryResult && (
+                <div className="mt-6 space-y-4 p-5 rounded-2xl border border-emerald-500/30 bg-emerald-500/10">
+                  <div className="flex items-center justify-between border-b border-emerald-500/20 pb-4">
+                    <div>
+                      <h3 className="text-sm font-bold text-emerald-400">Weaponized Text Ready</h3>
+                      <p className="text-xs text-emerald-500/70">The text below contains an invisible cryptographic tag. Do not edit it manually.</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(canaryResult);
+                        alert("Copied to clipboard! The invisible tag is embedded.");
+                      }}
+                      className="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-white font-bold text-xs flex items-center gap-2"
+                    >
+                      <Copy className="w-4 h-4" /> Copy to Clipboard
+                    </button>
+                  </div>
+                  
+                  <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 text-sm whitespace-pre-wrap font-mono">
+                    {canaryResult}
                   </div>
                 </div>
               )}

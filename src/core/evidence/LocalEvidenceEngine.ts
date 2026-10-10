@@ -1,3 +1,5 @@
+import { extractCanary } from '../forensics/canary';
+
 export interface EvidenceEngine {
   analyzeText(text: string): string[];
   analyzeUrl(url: string): string[];
@@ -7,6 +9,12 @@ export class LocalEvidenceEngine implements EvidenceEngine {
   analyzeText(text: string): string[] {
     const evidenceList: string[] = [];
     const lowerText = text.toLowerCase();
+
+    // 1. PROJECT CANARY: INVISIBLE DATA LANDMINE DETECTOR
+    const canaryTag = extractCanary(text);
+    if (canaryTag) {
+      evidenceList.push(`Canary Landmine Triggered! Scammer scraped this data from: [${canaryTag.toUpperCase()}]`);
+    }
 
     if (
       lowerText.includes('urgent') ||

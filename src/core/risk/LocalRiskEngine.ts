@@ -55,9 +55,14 @@ export class LocalRiskEngine implements RiskEngine {
     const chainPoints = highRiskStagesCount * 10.0;
     score += Math.min(20.0, chainPoints); // Up to 20 points from critical stages
 
-    // 6. Explicit critical heuristics override (Crypto, Arrest, Grandparent)
+    // 6. Explicit critical heuristics override (Crypto, Arrest, Grandparent, Canary)
     const criticalEvidenceText = evidence.join(' ').toLowerCase();
-    if (criticalEvidenceText.includes('cryptocurrency') || 
+    
+    // Auto-CRITICAL for Canary Landmines
+    if (criticalEvidenceText.includes('canary landmine triggered')) {
+        score += 100; // Unquestionable proof of stolen data
+    }
+    else if (criticalEvidenceText.includes('cryptocurrency') || 
         criticalEvidenceText.includes('grandparent scam') || 
         criticalEvidenceText.includes('arrest detected') ||
         criticalEvidenceText.includes('impersonation indicator')
