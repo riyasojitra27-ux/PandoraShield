@@ -109,7 +109,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         </div>
       </div>
 
-      {/* FEATURED: PROJECT PHANTOM BANNER */}
+      {/* FEATURED: CYBER-FORENSICS LAB BANNER */}
       <div
         className="p-6 rounded-3xl border relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-md"
         style={{
@@ -118,22 +118,22 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         }}
       >
         <div className="space-y-2 max-w-xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-purple-500/15 border border-purple-500/30 text-purple-600 dark:text-purple-300">
-            <Sparkles className="w-3.5 h-3.5" /> Signature Feature &middot; Project Phantom
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-cyan-500/15 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400">
+            <Sparkles className="w-3.5 h-3.5" /> New Advanced Toolkit &middot; Cyber-Forensics Lab
           </div>
           <h3 className="text-xl font-extrabold tracking-tight" style={{ color: 'var(--text-primary)' }}>
-            Digital Privacy Exposure Simulator
+            X-Ray Vision & Imposter ID
           </h3>
           <p className="text-xs sm:text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-            Simulate how your online profiles, geotags, and travel announcements expose your identity — then test privacy controls in real time.
+            Unmask invisible characters and homoglyph attacks, or use linguistic fingerprinting to detect if a message from your boss is actually from an imposter.
           </p>
         </div>
 
         <button
-          onClick={() => onNavigate('phantom')}
-          className="px-6 py-3.5 rounded-2xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm shadow-lg shadow-purple-600/30 transition-all cursor-pointer flex items-center gap-2 shrink-0"
+          onClick={() => onNavigate('forensics')}
+          className="px-6 py-3.5 rounded-2xl bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-sm shadow-lg shadow-cyan-600/30 transition-all cursor-pointer flex items-center gap-2 shrink-0"
         >
-          <EyeOff className="w-4 h-4" /> Launch Project Phantom <ArrowRight className="w-4 h-4" />
+          <EyeOff className="w-4 h-4" /> Launch Forensics Lab <ArrowRight className="w-4 h-4" />
         </button>
       </div>
 

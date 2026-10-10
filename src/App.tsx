@@ -7,7 +7,7 @@ import { UrlScannerScreen } from './screens/UrlScannerScreen';
 import { ScreenshotScannerScreen } from './screens/ScreenshotScannerScreen';
 import { SafetyCheckScreen } from './screens/SafetyCheckScreen';
 import { HelpSomeoneScreen } from './screens/HelpSomeoneScreen';
-import { PhantomScreen } from './screens/PhantomScreen';
+import { ForensicsHubScreen } from './screens/ForensicsHubScreen';
 import { AnalysisProgress } from './components/AnalysisProgress';
 import { ResultScreen } from './screens/ResultScreen';
 import { HistoryScreen } from './screens/HistoryScreen';
@@ -112,8 +112,8 @@ function AppContent() {
           />
         )}
 
-        {activeTab === 'phantom' && (
-          <PhantomScreen onNavigateToScan={() => setActiveTab('scan')} />
+        {activeTab === 'forensics' && (
+          <ForensicsHubScreen />
         )}
 
         {activeTab === 'scan' && (

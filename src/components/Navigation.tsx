@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Shield, Home, Search, History, ShieldCheck, Settings, Lock, EyeOff } from 'lucide-react';
 import { useSettings } from '../context/SettingsContext';
 
-export type ActiveTab = 'home' | 'phantom' | 'scan' | 'protection' | 'history' | 'settings';
+export type ActiveTab = 'home' | 'forensics' | 'scan' | 'protection' | 'history' | 'settings';
 
 interface NavigationProps {
   activeTab: ActiveTab;
@@ -35,7 +35,7 @@ export const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab 
 
   const navItems = [
     { id: 'home', label: 'Home', icon: Home },
-    { id: 'phantom', label: 'Phantom', icon: EyeOff },
+    { id: 'forensics', label: 'Forensics', icon: EyeOff },
     { id: 'scan', label: 'Scan', icon: Search },
     { id: 'protection', label: 'Protection', icon: ShieldCheck },
     { id: 'history', label: 'History', icon: History },
