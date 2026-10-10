@@ -25,7 +25,7 @@ interface SettingsContextType {
 const SETTINGS_STORAGE_KEY = 'pandorashield-settings';
 
 const DEFAULT_SETTINGS: AppSettings = {
-  theme: 'system',
+  theme: 'dark',
   simpleMode: false,
   textSize: 'default',
   demoMode: false
@@ -67,37 +67,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       console.error('Failed to save settings to localStorage', e);
     }
 
+    // Always enforce dark mode — light/system themes are removed
     const root = document.documentElement;
     root.setAttribute('data-text-size', settings.textSize);
-
-    const applyTheme = () => {
-      if (settings.theme === 'dark') {
-        root.setAttribute('data-theme', 'dark');
-        root.classList.add('dark');
-      } else if (settings.theme === 'light') {
-        root.setAttribute('data-theme', 'light');
-        root.classList.remove('dark');
-      } else {
-        // system
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        if (prefersDark) {
-          root.setAttribute('data-theme', 'dark');
-          root.classList.add('dark');
-        } else {
-          root.setAttribute('data-theme', 'light');
-          root.classList.remove('dark');
-        }
-      }
-    };
-
-    applyTheme();
-
-    if (settings.theme === 'system') {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      const listener = () => applyTheme();
-      mediaQuery.addEventListener('change', listener);
-      return () => mediaQuery.removeEventListener('change', listener);
-    }
+    root.setAttribute('data-theme', 'dark');
+    root.classList.add('dark');
   }, [settings]);
 
   const setTheme = (theme: ThemeMode) => {
