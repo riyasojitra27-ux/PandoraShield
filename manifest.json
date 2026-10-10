@@ -1,0 +1,16 @@
+{
+  "name": "PandoraShield Scam & Privacy Protection",
+  "short_name": "PandoraShield",
+  "description": "Privacy-First Local-First Scam & Phishing Detection Engine",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0B1020",
+  "theme_color": "#0B1020",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}
