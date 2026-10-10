@@ -1,5 +1,5 @@
 // PandoraShield Local-First Offline Service Worker
-const CACHE_NAME = 'pandorashield-pwa-v2'; // Bumped version to clear old hashed chunks
+const CACHE_NAME = 'pandorashield-pwa-v3'; // Bumped: force dark mode update
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
