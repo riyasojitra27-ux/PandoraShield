@@ -45,9 +45,6 @@ export const ForensicsHubScreen: React.FC = () => {
           <h1 className="text-3xl font-extrabold tracking-tight text-white">
             Advanced Intelligence Toolkit
           </h1>
-          <p className="text-sm text-slate-400 max-w-2xl">
-            Go beyond standard AI detection. Use military-grade OSINT tools running entirely in your browser to detect invisible homoglyph attacks and perform linguistic fingerprinting to catch imposters.
-          </p>
         </div>
       </div>
 
