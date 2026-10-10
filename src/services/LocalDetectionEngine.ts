@@ -1,5 +1,6 @@
 import { DetectionEngine } from './DetectionEngine';
 import { DetectionResult, DetectionEvidence, ScamChainStep, Severity, Verdict } from '../types/detection';
+import Tesseract from 'tesseract.js';
 import { LocalDetectionCoordinator } from '../core/detection/LocalDetectionCoordinator';
 import { ScamStage } from '../core/model/DetectionResult';
 
@@ -173,30 +174,91 @@ export class LocalDetectionEngine implements DetectionEngine {
   }
 
   async analyzeScreenshot(image: Blob | File | string): Promise<DetectionResult> {
-    const name = typeof image === 'string' ? image : image instanceof File ? image.name : 'Uploaded Screenshot';
-    const evidence = ['Image artifact uploaded for local inspection'];
+    let ocrInput: Blob | File | string = image;
+    let name = 'Uploaded Screenshot';
 
-    const uiEvidence = mapEvidenceToUi(evidence, 'LOW');
-    const uiChain = mapScamChainToUi([]);
+    if (typeof image === 'string' && image.startsWith('__IMAGE_DATA__')) {
+      // Data URL from ScreenshotScannerScreen
+      ocrInput = image.slice('__IMAGE_DATA__'.length);
+      name = 'Uploaded Screenshot';
+    } else if (typeof image === 'string') {
+      name = image;
+    } else if (image instanceof File) {
+      name = image.name;
+    }
+
+    let extractedText = '';
+    try {
+      // Run Tesseract.js directly in the browser
+      const result = await Tesseract.recognize(ocrInput, 'eng', {
+        logger: m => console.log('Tesseract:', m.status, Math.round(m.progress * 100) + '%')
+      });
+      extractedText = result.data.text.trim();
+    } catch (e) {
+      console.error('OCR Extraction failed:', e);
+      throw new Error('Failed to extract text from the image using local OCR.');
+    }
+
+    if (!extractedText) {
+      return {
+        id: 'local-screenshot-' + Date.now(),
+        timestamp: Date.now(),
+        inputType: 'SCREENSHOT',
+        originalInput: name,
+        riskScore: 10,
+        severity: 'SAFE',
+        verdict: 'SAFE',
+        category: 'Screenshot Inspection',
+        explanation: 'Local OCR completed but no readable text was found in the image.',
+        recommendation: 'Ensure the image contains clear, readable English text.',
+        recommendations: ['Upload a clearer image.'],
+        evidence: mapEvidenceToUi(['No readable text found via OCR'], 'LOW'),
+        scamChain: mapScamChainToUi([]),
+        technicalDetails: ['Local OCR: No text'],
+        source: 'LOCAL',
+        confidence: 90,
+        titleSnippet: name,
+      };
+    }
+
+    // Run the extracted text through the standard text pipeline
+    const coreResult = await coordinator.analyzeText(extractedText);
+
+    const verdict = mapVerdict(coreResult.severity, coreResult.riskScore);
+    const category = mapCategory('MESSAGE', coreResult.severity, coreResult.evidence);
+    
+    // Prepend OCR evidence
+    const combinedEvidence = ['Text extracted locally via WebAssembly OCR', ...coreResult.evidence];
+    const uiEvidence = mapEvidenceToUi(combinedEvidence, coreResult.severity);
+    const uiChain = mapScamChainToUi(coreResult.chainStages);
+
+    const techIndicators = [
+      `Model: MiniLM-L6 (INT8 ONNX in WASM)`,
+      `OCR Engine: Tesseract.js (WASM)`,
+      `Text ML Risk: ${(coreResult.textRisk !== null ? (coreResult.textRisk * 100).toFixed(2) + '%' : 'N/A')}`,
+      `Heuristic Evidence Flags: ${coreResult.evidence.length}`,
+      `Attack Chain Stages: ${coreResult.chainStages.length}`
+    ];
 
     return {
       id: 'local-screenshot-' + Date.now(),
       timestamp: Date.now(),
       inputType: 'SCREENSHOT',
       originalInput: name,
-      riskScore: 10,
-      severity: 'SAFE',
-      verdict: 'SAFE',
-      category: 'Screenshot Inspection',
-      explanation: 'Screenshot metadata inspected locally. No malicious vectors embedded in container.',
-      recommendation: 'Verify the textual content inside the image using the Check Message tool for deep NLP analysis.',
-      recommendations: ['Verify text content using Message Scanner.'],
+      riskScore: coreResult.riskScore,
+      severity: coreResult.severity,
+      verdict,
+      category,
+      explanation: coreResult.explanation,
+      recommendation: coreResult.recommendation,
+      recommendations: [coreResult.recommendation],
       evidence: uiEvidence,
       scamChain: uiChain,
-      technicalDetails: ['Local Container Inspection: PASS'],
+      technicalDetails: techIndicators,
       source: 'LOCAL',
       confidence: 95,
       titleSnippet: name,
+      extractedText: extractedText // Include so UI can display it
     };
   }
 }

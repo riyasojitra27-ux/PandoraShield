@@ -58,6 +58,7 @@ export interface DetectionResult {
   textRisk?: number | null;
   urlRisk?: number | null;
   threatIntelMatch?: boolean;
+  extractedText?: string;
 }
 
 export interface ProtectionEvent {

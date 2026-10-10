@@ -53,22 +53,29 @@ function AppContent() {
       return;
     }
 
-    let result: DetectionResult;
-    if (pendingInput.type === 'message') {
-      result = await analyzeText(pendingInput.value);
-    } else if (pendingInput.type === 'url') {
-      result = await analyzeUrl(pendingInput.value);
-    } else if (pendingInput.type === 'screenshot') {
-      result = await analyzeScreenshot(pendingInput.value);
-    } else {
-      result = await runSafetyCheck(pendingInput.value);
-    }
+    try {
+      let result: DetectionResult;
+      if (pendingInput.type === 'message') {
+        result = await analyzeText(pendingInput.value);
+      } else if (pendingInput.type === 'url') {
+        result = await analyzeUrl(pendingInput.value);
+      } else if (pendingInput.type === 'screenshot') {
+        result = await analyzeScreenshot(pendingInput.value);
+      } else {
+        result = await runSafetyCheck(pendingInput.value);
+      }
 
-    setHistory(getStoredHistory());
-    setProtectionEvents(getStoredProtectionEvents());
-    setSelectedResult(result);
-    setActiveTab('result');
-    setPendingInput(null);
+      setHistory(getStoredHistory());
+      setProtectionEvents(getStoredProtectionEvents());
+      setSelectedResult(result);
+      setActiveTab('result');
+    } catch (error) {
+      console.error('Analysis failed:', error);
+      alert(`Analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setActiveTab('home');
+    } finally {
+      setPendingInput(null);
+    }
   };
 
   const handleClearHistory = () => {

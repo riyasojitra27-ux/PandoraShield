@@ -136,6 +136,14 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({ result, onBack, onNe
         <p className="text-xs sm:text-sm text-slate-800 dark:text-slate-200 font-mono bg-slate-50 dark:bg-slate-950/80 p-3 rounded-xl border border-slate-200 dark:border-slate-800/80 line-clamp-3">
           "{result.originalInput}"
         </p>
+        {result.extractedText && (
+          <div className="mt-3 space-y-1">
+            <span className="text-[11px] font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wider">OCR Extracted Text</span>
+            <p className="text-xs sm:text-sm text-slate-800 dark:text-slate-200 font-mono bg-purple-50 dark:bg-purple-950/30 p-3 rounded-xl border border-purple-200 dark:border-purple-800/50 whitespace-pre-wrap">
+              {result.extractedText}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Why Flagged / Evidence Section */}
