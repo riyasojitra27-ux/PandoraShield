@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Settings as SettingsIcon, Lock, Cpu, Trash2, Check, Info, RefreshCw, Sun, Moon, Monitor, Sliders, Volume2 } from 'lucide-react';
+import { Settings as SettingsIcon, Lock, Trash2, Check, Info, Moon } from 'lucide-react';
 import { useSettings } from '../context/SettingsContext';
 
 interface SettingsScreenProps {
@@ -8,11 +8,8 @@ interface SettingsScreenProps {
 }
 
 export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClearHistory, totalScansCount }) => {
-  const { theme, setTheme, simpleMode, setSimpleMode, demoMode, setDemoMode, textSize, setTextSize } = useSettings();
+  const { simpleMode, setSimpleMode, textSize, setTextSize } = useSettings();
   const [cleared, setCleared] = useState(false);
-  const [engineStatus] = useState('Active (Local ONNX Heuristics v2.4)');
-  const [checkingUpdate, setCheckingUpdate] = useState(false);
-  const [readAloudEnabled, setReadAloudEnabled] = useState(false);
 
   const handleClear = () => {
     onClearHistory();
@@ -46,43 +43,15 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClearHistory, 
         <div className="p-5 rounded-3xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-4 shadow-sm">
           <div>
             <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">Appearance</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Choose your preferred theme style</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Theme style</p>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
-            <button
-              onClick={() => setTheme('system')}
-              className={`p-4 rounded-2xl border flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${
-                theme === 'system'
-                  ? 'bg-blue-600/15 border-blue-500 text-blue-600 dark:text-blue-400 shadow-sm'
-                  : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300'
-              }`}
-            >
-              <Monitor className="w-5 h-5" />
-              <span className="text-xs font-semibold">System Default</span>
-            </button>
-            <button
-              onClick={() => setTheme('light')}
-              className={`p-4 rounded-2xl border flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${
-                theme === 'light'
-                  ? 'bg-blue-600/15 border-blue-500 text-blue-600 dark:text-blue-400 shadow-sm'
-                  : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300'
-              }`}
-            >
-              <Sun className="w-5 h-5 text-amber-500" />
-              <span className="text-xs font-semibold">Light</span>
-            </button>
-            <button
-              onClick={() => setTheme('dark')}
-              className={`p-4 rounded-2xl border flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${
-                theme === 'dark'
-                  ? 'bg-blue-600/15 border-blue-500 text-blue-600 dark:text-blue-400 shadow-sm'
-                  : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300'
-              }`}
-            >
+          <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-950 border border-indigo-500/30">
+            <div className="flex items-center gap-3">
               <Moon className="w-5 h-5 text-indigo-400" />
-              <span className="text-xs font-semibold">Dark</span>
-            </button>
+              <span className="text-sm font-semibold text-white">Dark Mode</span>
+            </div>
+            <span className="text-xs font-bold text-indigo-400 bg-indigo-500/15 px-3 py-1 rounded-full border border-indigo-500/30">Active</span>
           </div>
         </div>
 

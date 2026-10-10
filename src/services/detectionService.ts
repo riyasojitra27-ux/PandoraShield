@@ -45,11 +45,13 @@ export function getInitialHistory(): DetectionResult[] {
 export function getStoredHistory(): DetectionResult[] {
   try {
     const raw = localStorage.getItem(HISTORY_STORAGE_KEY);
-    if (!raw) {
+    if (raw === null) {
+      // Key doesn't exist yet — first run. Seed with demo data.
       const initial = getInitialHistory();
       localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(initial));
       return initial;
     }
+    // Key exists (even if empty array — user cleared it intentionally). Return as-is.
     return JSON.parse(raw);
   } catch {
     return getInitialHistory();
@@ -69,7 +71,9 @@ export function saveResultToHistory(result: DetectionResult): void {
 
 export function clearStoredHistory(): void {
   try {
-    localStorage.removeItem(HISTORY_STORAGE_KEY);
+    // Write an explicit empty array instead of removing the key.
+    // If the key is removed, getStoredHistory() will re-seed with demo data on the next call.
+    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify([]));
   } catch (err) {
     console.error('Failed to clear history', err);
   }
