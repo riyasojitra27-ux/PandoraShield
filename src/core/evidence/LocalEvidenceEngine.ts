@@ -80,6 +80,36 @@ export class LocalEvidenceEngine implements EvidenceEngine {
       evidenceList.push('Suspicious account/security claims detected');
     }
 
+    // High risk: Cryptocurrency demands
+    if (
+      lowerText.includes('bitcoin') ||
+      lowerText.includes('crypto') ||
+      lowerText.includes('wallet') ||
+      lowerText.includes('usdt') ||
+      lowerText.includes('btc')
+    ) {
+      evidenceList.push('Cryptocurrency demand detected (High Risk)');
+    }
+
+    // High risk: Family emergency / Grandparent scam
+    if (
+      (lowerText.includes('grandpa') || lowerText.includes('grandma') || lowerText.includes('mom') || lowerText.includes('dad')) &&
+      (lowerText.includes('accident') || lowerText.includes('jail') || lowerText.includes('stranded') || lowerText.includes('hospital'))
+    ) {
+      evidenceList.push('Family emergency impersonation (Grandparent Scam)');
+    }
+
+    // High risk: Legal/Law enforcement threats
+    if (
+      lowerText.includes('jail') ||
+      lowerText.includes('prison') ||
+      lowerText.includes('lawyer') ||
+      lowerText.includes('police') ||
+      lowerText.includes('arrest')
+    ) {
+      evidenceList.push('Threat of legal action or arrest detected');
+    }
+
     return evidenceList;
   }
 

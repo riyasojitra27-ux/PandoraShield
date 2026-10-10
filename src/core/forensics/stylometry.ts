@@ -53,40 +53,40 @@ export function compareStylometry(baselineText: string, suspectText: string): St
       baselineValue: baseline.avgWordLength,
       suspectValue: suspect.avgWordLength,
       difference: Math.abs(baseline.avgWordLength - suspect.avgWordLength),
-      isAnomalous: Math.abs(baseline.avgWordLength - suspect.avgWordLength) > 1.5,
+      isAnomalous: Math.abs(baseline.avgWordLength - suspect.avgWordLength) > 0.8,
     },
     {
       metric: 'Lexical Richness (Unique Words)',
       baselineValue: baseline.lexicalRichness * 100,
       suspectValue: suspect.lexicalRichness * 100,
       difference: Math.abs(baseline.lexicalRichness - suspect.lexicalRichness) * 100,
-      isAnomalous: Math.abs(baseline.lexicalRichness - suspect.lexicalRichness) > 0.25,
+      isAnomalous: Math.abs(baseline.lexicalRichness - suspect.lexicalRichness) > 0.15,
     },
     {
       metric: 'Punctuation Density',
       baselineValue: baseline.punctuationDensity * 100,
       suspectValue: suspect.punctuationDensity * 100,
       difference: Math.abs(baseline.punctuationDensity - suspect.punctuationDensity) * 100,
-      isAnomalous: Math.abs(baseline.punctuationDensity - suspect.punctuationDensity) > 0.05,
+      isAnomalous: Math.abs(baseline.punctuationDensity - suspect.punctuationDensity) > 0.02,
     },
     {
       metric: 'Capitalization Rate',
       baselineValue: baseline.capitalizationRate * 100,
       suspectValue: suspect.capitalizationRate * 100,
       difference: Math.abs(baseline.capitalizationRate - suspect.capitalizationRate) * 100,
-      isAnomalous: Math.abs(baseline.capitalizationRate - suspect.capitalizationRate) > 0.08,
+      isAnomalous: Math.abs(baseline.capitalizationRate - suspect.capitalizationRate) > 0.02,
     },
   ];
 
   const anomalousCount = deviations.filter((d) => d.isAnomalous).length;
   
-  // Base score is 100, subtract 25 for every major anomaly
-  const matchScore = Math.max(0, 100 - (anomalousCount * 25));
+  // Base score is 100, subtract 35 for every major anomaly
+  const matchScore = Math.max(0, 100 - (anomalousCount * 35));
 
   let verdict: StylometryResult['verdict'] = 'MATCH';
-  if (matchScore <= 25) {
+  if (matchScore <= 35) {
     verdict = 'IMPOSTER';
-  } else if (matchScore <= 75) {
+  } else if (matchScore <= 65) {
     verdict = 'INCONCLUSIVE';
   }
 

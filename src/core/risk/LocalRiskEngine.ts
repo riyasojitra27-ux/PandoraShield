@@ -55,6 +55,16 @@ export class LocalRiskEngine implements RiskEngine {
     const chainPoints = highRiskStagesCount * 10.0;
     score += Math.min(20.0, chainPoints); // Up to 20 points from critical stages
 
+    // 6. Explicit critical heuristics override (Crypto, Arrest, Grandparent)
+    const criticalEvidenceText = evidence.join(' ').toLowerCase();
+    if (criticalEvidenceText.includes('cryptocurrency') || 
+        criticalEvidenceText.includes('grandparent scam') || 
+        criticalEvidenceText.includes('arrest detected') ||
+        criticalEvidenceText.includes('impersonation indicator')
+    ) {
+        score += 50; // Massive boost for explicit high-severity heuristics
+    }
+
     const finalScoreInt = Math.min(100, Math.max(0, Math.floor(score)));
 
     let severity: Severity;
@@ -62,9 +72,9 @@ export class LocalRiskEngine implements RiskEngine {
       severity = 'SAFE';
     } else if (finalScoreInt <= 39) {
       severity = 'LOW';
-    } else if (finalScoreInt <= 59) {
+    } else if (finalScoreInt <= 64) {
       severity = 'MEDIUM';
-    } else if (finalScoreInt <= 79) {
+    } else if (finalScoreInt <= 84) {
       severity = 'HIGH';
     } else {
       severity = 'CRITICAL';

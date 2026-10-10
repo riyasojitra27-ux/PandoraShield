@@ -10,11 +10,11 @@ export class LocalScamChainEngine implements ScamChainEngine {
 
     for (const item of evidence) {
       const lowerItem = item.toLowerCase();
-      if (lowerItem.includes('impersonation')) {
+      if (lowerItem.includes('impersonation') || lowerItem.includes('grandparent')) {
         stages.push('IMPERSONATION');
       } else if (lowerItem.includes('urgency')) {
         stages.push('URGENCY');
-      } else if (lowerItem.includes('fear') || lowerItem.includes('threat')) {
+      } else if (lowerItem.includes('fear') || lowerItem.includes('threat') || lowerItem.includes('legal action') || lowerItem.includes('arrest')) {
         stages.push('FEAR');
       } else if (lowerItem.includes('reward') || lowerItem.includes('lottery')) {
         stages.push('REWARD_BAIT');
@@ -29,7 +29,7 @@ export class LocalScamChainEngine implements ScamChainEngine {
         stages.push('CREDENTIAL_HARVEST');
       } else if (lowerItem.includes('otp')) {
         stages.push('OTP_HARVEST');
-      } else if (lowerItem.includes('payment')) {
+      } else if (lowerItem.includes('payment') || lowerItem.includes('cryptocurrency') || lowerItem.includes('bitcoin')) {
         stages.push('PAYMENT_REQUEST');
       } else if (lowerItem.includes('data')) {
         stages.push('DATA_THEFT');
